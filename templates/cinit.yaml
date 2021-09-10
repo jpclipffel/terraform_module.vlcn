@@ -1,0 +1,53 @@
+#cloud-config
+
+# =====================================================================
+# Users, authentication and misc.
+# =====================================================================
+
+users:
+  - name: ${user_name}
+    gecos: ${user_name}
+    lock_passwd: true
+    plain_text_passwd: ${user_password}
+    groups: sudo, users, admin
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ${user_public_key}
+
+disable_root: true
+ssh_pwauth: false
+hostname: ${hostname}
+
+# =====================================================================
+# Config-time setup
+# =====================================================================
+
+write_files:
+  # Disable automatic Netplan configuration
+  - path: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+    content: |
+      network: { config: disabled }
+  # Custom Netplan configuration
+  - path: /etc/netplan/50-cloud-init.yaml
+    content: |
+        network:
+            version: 2
+            ethernets:
+                ${network_iface}:
+                    addresses:
+                        - ${network_addr}/${network_mask}
+                    gateway4: ${network_gw_addr}
+                    nameservers:
+                        addresses:
+                            - ${network_ns_addr}
+
+# =====================================================================
+# Run-time setup
+# =====================================================================
+
+runcmd:
+# Apply Netplan configuration
+- netplan apply
+# Set hostname
+- hostnamectl set-hostname ${hostname}
