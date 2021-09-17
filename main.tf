@@ -37,7 +37,7 @@ resource "vsphere_virtual_machine" "instance" {
 
   # Cloud-init configuration
   vapp {
-    properties ={
+    properties = {
       hostname = var.hostname
       user-data = base64encode(
         templatefile(
